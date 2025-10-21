@@ -37,11 +37,8 @@ new_sqlite_classes = ["WebSocketDurableObject"]
 NODE_ENV = "production"
 
 # Build Configuration
-[build]
-command = "npm run build"
-
-# Cloudflare Pages Configuration
-pages_build_output_dir = ".vercel/output/static"
+# [build]
+# command = "npm run build"
 
 # Local Development Settings
 [env.development]
