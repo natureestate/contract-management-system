@@ -1,35 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
 
-// หมายเหตุ: ไม่ใช้ edge runtime เพราะ Prisma ต้องการ Node.js runtime
-// สำหรับ Cloudflare deployment ให้ใช้ Workers API แทน
+// Edge Runtime สำหรับ Cloudflare Pages
+export const runtime = 'edge';
+
+// Worker API URL
+const WORKER_API_URL = process.env.NEXT_PUBLIC_WORKER_API_URL || 'http://localhost:8787';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const contract = await db.contract.findUnique({
-      where: { id: params.id },
-      include: {
-        client: true
-      }
-    })
+    const response = await fetch(`${WORKER_API_URL}/api/contracts/${params.id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-    if (!contract) {
-      return NextResponse.json(
-        { error: 'Contract not found' },
-        { status: 404 }
-      )
-    }
-
-    return NextResponse.json(contract)
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
   } catch (error) {
-    console.error('Error fetching contract:', error)
+    console.error('Error fetching contract:', error);
     return NextResponse.json(
       { error: 'Failed to fetch contract' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -38,52 +34,24 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const data = await request.json()
+    const body = await request.json();
     
-    const contract = await db.contract.update({
-      where: { id: params.id },
-      data: {
-        contractNumber: data.contractNumber,
-        location: data.location,
-        contractDate: new Date(data.contractDate),
-        clientId: data.clientId,
-        contractorName: data.contractorName,
-        contractorType: data.contractorType,
-        contractorIdCard: data.contractorIdCard || null,
-        contractorRegistration: data.contractorRegistration || null,
-        contractorAddress: data.contractorAddress,
-        contractorPosition: data.contractorPosition || null,
-        buildingType: data.buildingType,
-        buildingFloors: data.buildingFloors,
-        buildingArea: data.buildingArea,
-        projectLocation: data.projectLocation,
-        floorPlanDuration: data.floorPlanDuration,
-        threeDDuration: data.threeDDuration,
-        constructionDuration: data.constructionDuration,
-        totalFee: data.totalFee,
-        paymentTerms: data.paymentTerms,
-        witness1Name: data.witness1Name || null,
-        witness2Name: data.witness2Name || null,
-        status: data.status,
+    const response = await fetch(`${WORKER_API_URL}/api/contracts/${params.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      include: {
-        client: {
-          select: {
-            id: true,
-            name: true,
-            type: true,
-          }
-        }
-      }
-    })
+      body: JSON.stringify(body),
+    });
 
-    return NextResponse.json(contract)
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
   } catch (error) {
-    console.error('Error updating contract:', error)
+    console.error('Error updating contract:', error);
     return NextResponse.json(
       { error: 'Failed to update contract' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -92,16 +60,20 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    await db.contract.delete({
-      where: { id: params.id }
-    })
+    const response = await fetch(`${WORKER_API_URL}/api/contracts/${params.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-    return NextResponse.json({ message: 'Contract deleted successfully' })
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
   } catch (error) {
-    console.error('Error deleting contract:', error)
+    console.error('Error deleting contract:', error);
     return NextResponse.json(
       { error: 'Failed to delete contract' },
       { status: 500 }
-    )
+    );
   }
 }

@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 
-// หมายเหตุ: ไม่ใช้ edge runtime เพราะ Prisma ต้องการ Node.js runtime
-// สำหรับ Cloudflare deployment ให้ใช้ Workers API แทน
+// Edge Runtime สำหรับ Cloudflare Pages
+export const runtime = 'edge';
 
 export async function GET() {
-  return NextResponse.json({ message: "Good!" });
+  return NextResponse.json({ 
+    message: "Good!",
+    status: "ok",
+    timestamp: new Date().toISOString()
+  });
 }

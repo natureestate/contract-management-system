@@ -1,51 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
 
-// หมายเหตุ: ไม่ใช้ edge runtime เพราะ Prisma ต้องการ Node.js runtime
-// สำหรับ Cloudflare deployment ให้ใช้ Workers API แทน
+// Edge Runtime สำหรับ Cloudflare Pages
+export const runtime = 'edge';
+
+// Worker API URL (จะใช้ environment variable ใน production)
+const WORKER_API_URL = process.env.NEXT_PUBLIC_WORKER_API_URL || 'http://localhost:8787';
 
 export async function GET() {
   try {
-    const clients = await db.client.findMany({
-      orderBy: {
-        createdAt: 'desc'
-      }
-    })
+    const response = await fetch(`${WORKER_API_URL}/api/clients`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-    return NextResponse.json(clients)
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
   } catch (error) {
-    console.error('Error fetching clients:', error)
+    console.error('Error fetching clients:', error);
     return NextResponse.json(
       { error: 'Failed to fetch clients' },
       { status: 500 }
-    )
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const data = await request.json()
+    const body = await request.json();
     
-    const client = await db.client.create({
-      data: {
-        name: data.name,
-        type: data.type,
-        idCard: data.idCard || null,
-        registrationNo: data.registrationNo || null,
-        address: data.address,
-        phone: data.phone || null,
-        email: data.email || null,
-        taxId: data.taxId || null,
-        contactPerson: data.contactPerson || null,
-      }
-    })
+    const response = await fetch(`${WORKER_API_URL}/api/clients`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
 
-    return NextResponse.json(client, { status: 201 })
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
   } catch (error) {
-    console.error('Error creating client:', error)
+    console.error('Error creating client:', error);
     return NextResponse.json(
       { error: 'Failed to create client' },
       { status: 500 }
-    )
+    );
   }
 }
