@@ -1,0 +1,49 @@
+# Cloudflare Workers Configuration
+# สำหรับโปรเจกต์ Contract Management System
+
+name = "pospro-contract"
+main = "src/worker.ts"
+compatibility_date = "2025-10-20"
+compatibility_flags = ["nodejs_compat"]
+
+# Cloudflare D1 Database Binding
+# หลังจากสร้าง D1 database ให้อัพเดท database_id
+[[d1_databases]]
+binding = "DB"
+database_name = "contract-db"
+database_id = "8e5d414c-f320-4ca3-912c-bb82fc0613c6"
+
+# Cloudflare R2 Storage Binding
+# สำหรับเก็บไฟล์ PDF และเอกสาร
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "contract-files"
+
+# Cloudflare Durable Objects Binding
+# สำหรับ WebSocket real-time communication
+[[durable_objects.bindings]]
+name = "WEBSOCKET"
+class_name = "WebSocketDurableObject"
+script_name = "pospro-contract"
+
+# Export Durable Object class
+# สำหรับ free plan ต้องใช้ new_sqlite_classes
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["WebSocketDurableObject"]
+
+# Environment Variables
+[vars]
+NODE_ENV = "production"
+
+# Build Configuration
+[build]
+command = "npm run build"
+
+# Cloudflare Pages Configuration
+pages_build_output_dir = ".vercel/output/static"
+
+# Local Development Settings
+[env.development]
+vars = { NODE_ENV = "development" }
+
